@@ -77,8 +77,8 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const updateRole = async (newRole: string) => {
-    await supabase.from("profiles").update({ role: newRole }).eq("user_id", user!.id);
+const updateRole = async (newRole: string) => {
+    await supabase.from("profiles").update({ role: newRole as any }).eq("user_id", user!.id);
     setRole(newRole);
     toast({ title: "Role updated" });
   };
