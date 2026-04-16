@@ -22,13 +22,25 @@ export default function TutorProfile() {
     if (!userId) return;
     const load = async () => {
       const [{ data: tp }, { data: sl }, { data: rv }] = await Promise.all([
-        supabase.from("tutor_profiles").select("*, profiles!tutor_profiles_user_id_fkey(full_name, avatar_url)").eq("user_id", userId).single(),
+        supabase.from("tutor_profiles").select("*").eq("user_id", userId).single(),
         supabase.from("time_slots").select("*").eq("tutor_id", userId).eq("status", "available").gte("start_time", new Date().toISOString()).order("start_time"),
-        supabase.from("ratings").select("*, profiles!ratings_student_id_fkey(full_name)").eq("tutor_id", userId).order("created_at", { ascending: false }),
+        supabase.from("ratings").select("*").eq("tutor_id", userId).order("created_at", { ascending: false }),
       ]);
-      setTutor(tp);
+      // Fetch profile name separately
+      if (tp) {
+        const { data: prof } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", userId).single();
+        setTutor({ ...tp, profiles: prof });
+      }
+      // Fetch reviewer names
+      if (rv && rv.length > 0) {
+        const sIds = [...new Set(rv.map((r: any) => r.student_id))];
+        const { data: profs } = await supabase.from("profiles").select("user_id, full_name").in("user_id", sIds);
+        const pm = Object.fromEntries((profs || []).map((p) => [p.user_id, p]));
+        setReviews(rv.map((r: any) => ({ ...r, profiles: pm[r.student_id] || null })));
+      } else {
+        setReviews([]);
+      }
       setSlots(sl || []);
-      setReviews(rv || []);
     };
     load();
   }, [userId]);
