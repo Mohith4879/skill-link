@@ -25,11 +25,18 @@ export default function Tutors() {
 
   useEffect(() => {
     const fetchTutors = async () => {
-      const { data } = await supabase
+      const { data: tps } = await supabase
         .from("tutor_profiles")
-        .select("*, profiles!tutor_profiles_user_id_fkey(full_name, avatar_url)")
+        .select("*")
         .order("rating", { ascending: false });
-      setTutors((data as any) || []);
+      if (tps && tps.length > 0) {
+        const userIds = tps.map((t) => t.user_id);
+        const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
+        const profMap = Object.fromEntries((profs || []).map((p) => [p.user_id, p]));
+        setTutors(tps.map((t) => ({ ...t, profiles: profMap[t.user_id] || null })) as any);
+      } else {
+        setTutors([]);
+      }
       setLoading(false);
     };
     fetchTutors();
