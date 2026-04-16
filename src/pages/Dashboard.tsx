@@ -56,7 +56,7 @@ export default function Dashboard() {
     const [{ data: p }, { data: tp }, { data: bk }, { data: rt }] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("tutor_profiles").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("bookings").select("*, time_slots(*), profiles!bookings_tutor_id_fkey(full_name), student:profiles!bookings_student_id_fkey(full_name)").or(`student_id.eq.${user.id},tutor_id.eq.${user.id}`).order("created_at", { ascending: false }),
+      supabase.from("bookings").select("*, time_slots(*)").or(`student_id.eq.${user.id},tutor_id.eq.${user.id}`).order("created_at", { ascending: false }),
       supabase.from("ratings").select("booking_id").eq("student_id", user.id),
     ]);
     setProfile(p);
@@ -67,7 +67,15 @@ export default function Dashboard() {
       setSubjects(tp.subjects?.join(", ") || "");
       setHourlyRate(String(tp.hourly_rate || ""));
     }
-    setBookings(bk || []);
+    // Enrich bookings with profile names
+    if (bk && bk.length > 0) {
+      const allIds = [...new Set(bk.flatMap((b: any) => [b.tutor_id, b.student_id]))];
+      const { data: profs } = await supabase.from("profiles").select("user_id, full_name").in("user_id", allIds);
+      const pm = Object.fromEntries((profs || []).map((pr) => [pr.user_id, pr]));
+      setBookings(bk.map((b: any) => ({ ...b, profiles: pm[b.tutor_id] || null, student: pm[b.student_id] || null })));
+    } else {
+      setBookings([]);
+    }
     setExistingRatings(new Set((rt || []).map((r: any) => r.booking_id)));
 
     if (p?.role === "tutor" || p?.role === "both") {
