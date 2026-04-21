@@ -14,12 +14,18 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
+  XCircle, CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -146,6 +152,65 @@ export default function Dashboard() {
     await supabase.from("time_slots").update({ status: "completed" }).eq("id", slotId);
     toast({ title: "Session marked complete" });
     loadData();
+  };
+
+  const cancelBooking = async (bookingId: string) => {
+    // Optimistic UI: drop it from the visible list immediately
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b)));
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId);
+    if (error) {
+      toast({ title: "Could not cancel", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Session cancelled", description: "The time slot is now available again." });
+    }
+    loadData();
+  };
+
+  const [rescheduleBooking, setRescheduleBooking] = useState<any>(null);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [pickedSlotId, setPickedSlotId] = useState<string>("");
+
+  const openReschedule = async (booking: any) => {
+    setRescheduleBooking(booking);
+    setPickedSlotId("");
+    const { data } = await supabase
+      .from("time_slots")
+      .select("*")
+      .eq("tutor_id", booking.tutor_id)
+      .eq("status", "available")
+      .gte("start_time", new Date().toISOString())
+      .order("start_time");
+    setAvailableSlots(data || []);
+  };
+
+  const confirmReschedule = async () => {
+    if (!rescheduleBooking || !pickedSlotId) return;
+    const { error } = await supabase
+      .from("bookings")
+      .update({ slot_id: pickedSlotId })
+      .eq("id", rescheduleBooking.id);
+    if (error) {
+      toast({ title: "Reschedule failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Session rescheduled" });
+    }
+    setRescheduleBooking(null);
+    setPickedSlotId("");
+    loadData();
+  };
+
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+      case "cancelled":
+        return "bg-red-500/15 text-red-400 border border-red-500/30";
+      default:
+        return "bg-amber-500/15 text-amber-400 border border-amber-500/30";
+    }
   };
 
   if (authLoading || loading) {
@@ -321,11 +386,42 @@ export default function Dashboard() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge>Confirmed</Badge>
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                              <span className={cn("text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
+                                {b.status}
+                              </span>
                               {b.tutor_id === user!.id && (
-                                <Button size="sm" variant="outline" onClick={() => markComplete(b.id, b.slot_id)}>Complete</Button>
+                                <Button size="sm" variant="outline" onClick={() => markComplete(b.id, b.slot_id)}>
+                                  <CheckCircle2 className="h-4 w-4" /> Complete
+                                </Button>
                               )}
+                              <Button size="sm" variant="outline" onClick={() => openReschedule(b)}>
+                                <CalendarClock className="h-4 w-4" /> Reschedule
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/40">
+                                    <XCircle className="h-4 w-4" /> Cancel
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Cancel this session?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      The other party will be notified and the time slot will become available again. This cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Keep session</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => cancelBooking(b.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Yes, cancel
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         ))}
@@ -353,7 +449,9 @@ export default function Dashboard() {
                               <p className="font-medium">
                                 {b.student_id === user!.id ? `Tutor: ${b.profiles?.full_name}` : `Student: ${b.student?.full_name}`}
                               </p>
-                              <Badge variant="secondary" className="mt-1 capitalize">{b.status}</Badge>
+                              <span className={cn("inline-block mt-1 text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
+                                {b.status}
+                              </span>
                             </div>
                             {b.status === "completed" && b.student_id === user!.id && !existingRatings.has(b.id) && (
                               <Dialog>
@@ -464,6 +562,51 @@ export default function Dashboard() {
           </main>
         </div>
       </div>
+
+      {/* Reschedule dialog */}
+      <Dialog open={!!rescheduleBooking} onOpenChange={(o) => !o && setRescheduleBooking(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-primary" /> Reschedule session
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Pick a new available slot from {rescheduleBooking?.profiles?.full_name || "the tutor"}.
+            </p>
+            {availableSlots.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No other available slots from this tutor.</p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto space-y-2">
+                {availableSlots.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setPickedSlotId(s.id)}
+                    className={cn(
+                      "w-full text-left rounded-lg border p-3 text-sm transition-smooth",
+                      pickedSlotId === s.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/40 hover:bg-muted/40"
+                    )}
+                  >
+                    <span className="font-medium">{new Date(s.start_time).toLocaleDateString()}</span>{" "}
+                    {new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                    {new Date(s.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Button
+              onClick={confirmReschedule}
+              disabled={!pickedSlotId}
+              className="w-full gradient-cta text-primary-foreground border-0"
+            >
+              Confirm reschedule
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
