@@ -449,7 +449,9 @@ export default function Dashboard() {
                               <p className="font-medium">
                                 {b.student_id === user!.id ? `Tutor: ${b.profiles?.full_name}` : `Student: ${b.student?.full_name}`}
                               </p>
-                              <Badge variant="secondary" className="mt-1 capitalize">{b.status}</Badge>
+                              <span className={cn("inline-block mt-1 text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
+                                {b.status}
+                              </span>
                             </div>
                             {b.status === "completed" && b.student_id === user!.id && !existingRatings.has(b.id) && (
                               <Dialog>
