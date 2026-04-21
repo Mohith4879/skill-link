@@ -400,7 +400,7 @@ export default function Dashboard() {
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button size="sm" variant="outline" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/30">
+                                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/40">
                                     <XCircle className="h-4 w-4" /> Cancel
                                   </Button>
                                 </AlertDialogTrigger>
@@ -415,7 +415,7 @@ export default function Dashboard() {
                                     <AlertDialogCancel>Keep session</AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => cancelBooking(b.id)}
-                                      className="bg-red-500 text-white hover:bg-red-600"
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     >
                                       Yes, cancel
                                     </AlertDialogAction>
