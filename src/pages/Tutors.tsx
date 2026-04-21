@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, Search, GraduationCap } from "lucide-react";
+import Navbar from "@/components/layout/Navbar";
+import { Star, Search, BookOpen, Users } from "lucide-react";
 
 interface TutorWithProfile {
   id: string;
@@ -53,66 +55,99 @@ export default function Tutors() {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary">
-            <GraduationCap className="h-7 w-7" /> Skill-Link
-          </Link>
-          <Link to="/auth"><Button size="sm">Sign In</Button></Link>
+      <Navbar />
+
+      {/* Header */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 -z-10 gradient-hero" />
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-16">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h1 className="font-display text-3xl md:text-5xl font-bold">
+              Find Your Perfect <span className="gradient-text">Tutor</span>
+            </h1>
+            <p className="mt-3 text-muted-foreground max-w-xl">
+              Browse {tutors.length || "our"} peer tutors and book a session that fits your schedule.
+            </p>
+            <div className="relative mt-6 max-w-xl">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or subject..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-11 h-12 rounded-xl bg-card shadow-soft border-border/60 focus-visible:ring-primary/40"
+              />
+            </div>
+          </motion.div>
         </div>
-      </nav>
+      </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10">
-        <h1 className="text-3xl font-bold">Find a Tutor</h1>
-        <p className="mt-2 text-muted-foreground">Browse peer tutors and book a session</p>
-
-        <div className="relative mt-6 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or subject..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
+      <div className="mx-auto max-w-7xl px-4 md:px-6 py-10">
         {loading ? (
-          <div className="mt-12 text-center text-muted-foreground">Loading tutors...</div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-56 rounded-xl bg-muted animate-pulse" />
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="mt-12 text-center text-muted-foreground">
-            No tutors found. {tutors.length === 0 && "Be the first to become a tutor!"}
+          <div className="text-center py-20">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
+              <Users className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground">
+              No tutors found. {tutors.length === 0 && "Be the first to become a tutor!"}
+            </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((t) => (
-              <Link key={t.id} to={`/tutor/${t.user_id}`}>
-                <Card className="h-full transition-all hover:shadow-lg hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
-                        {(t.profiles?.full_name || "T")[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold truncate">{t.profiles?.full_name || "Tutor"}</h3>
-                        <div className="mt-1 flex items-center gap-1 text-sm">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span>{Number(t.rating).toFixed(1)}</span>
-                          <span className="text-muted-foreground">({t.total_ratings})</span>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.04 }}
+              >
+                <Link to={`/tutor/${t.user_id}`}>
+                  <Card className="group h-full overflow-hidden border-border/60 transition-smooth hover:shadow-elevated hover:-translate-y-1 hover:border-primary/30">
+                    <div className="h-2 gradient-primary" />
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-primary-foreground font-display font-bold text-xl shadow-soft transition-smooth group-hover:scale-105">
+                          {(t.profiles?.full_name || "T")[0].toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-display font-semibold truncate text-lg">{t.profiles?.full_name || "Tutor"}</h3>
+                          <div className="mt-1 flex items-center gap-1 text-sm">
+                            <Star className="h-4 w-4 fill-accent text-accent" />
+                            <span className="font-medium">{Number(t.rating).toFixed(1)}</span>
+                            <span className="text-muted-foreground">({t.total_ratings})</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <p className="mt-3 text-sm text-muted-foreground line-clamp-2">{t.bio || "No bio yet"}</p>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {t.subjects.slice(0, 4).map((s) => (
-                        <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
-                      ))}
-                    </div>
-                    {t.hourly_rate > 0 && (
-                      <p className="mt-3 text-sm font-medium text-primary">${Number(t.hourly_rate).toFixed(0)}/hr</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
+                      <p className="mt-4 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{t.bio || "No bio yet"}</p>
+                      <div className="mt-4 flex flex-wrap gap-1.5 min-h-[1.5rem]">
+                        {t.subjects.slice(0, 4).map((s) => (
+                          <Badge key={s} variant="secondary" className="text-xs font-medium">{s}</Badge>
+                        ))}
+                      </div>
+                      <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+                        <div>
+                          {t.hourly_rate > 0 ? (
+                            <>
+                              <p className="text-xs text-muted-foreground">From</p>
+                              <p className="font-display font-bold gradient-text text-lg">${Number(t.hourly_rate).toFixed(0)}<span className="text-xs text-muted-foreground font-normal">/hr</span></p>
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1"><BookOpen className="h-4 w-4"/>Free</p>
+                          )}
+                        </div>
+                        <Button size="sm" className="gradient-cta text-primary-foreground border-0 transition-smooth group-hover:shadow-glow">
+                          Book Session
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}
