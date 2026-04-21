@@ -154,6 +154,65 @@ export default function Dashboard() {
     loadData();
   };
 
+  const cancelBooking = async (bookingId: string) => {
+    // Optimistic UI: drop it from the visible list immediately
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b)));
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId);
+    if (error) {
+      toast({ title: "Could not cancel", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Session cancelled", description: "The time slot is now available again." });
+    }
+    loadData();
+  };
+
+  const [rescheduleBooking, setRescheduleBooking] = useState<any>(null);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [pickedSlotId, setPickedSlotId] = useState<string>("");
+
+  const openReschedule = async (booking: any) => {
+    setRescheduleBooking(booking);
+    setPickedSlotId("");
+    const { data } = await supabase
+      .from("time_slots")
+      .select("*")
+      .eq("tutor_id", booking.tutor_id)
+      .eq("status", "available")
+      .gte("start_time", new Date().toISOString())
+      .order("start_time");
+    setAvailableSlots(data || []);
+  };
+
+  const confirmReschedule = async () => {
+    if (!rescheduleBooking || !pickedSlotId) return;
+    const { error } = await supabase
+      .from("bookings")
+      .update({ slot_id: pickedSlotId })
+      .eq("id", rescheduleBooking.id);
+    if (error) {
+      toast({ title: "Reschedule failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Session rescheduled" });
+    }
+    setRescheduleBooking(null);
+    setPickedSlotId("");
+    loadData();
+  };
+
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+      case "cancelled":
+        return "bg-red-500/15 text-red-400 border border-red-500/30";
+      default:
+        return "bg-amber-500/15 text-amber-400 border border-amber-500/30";
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
