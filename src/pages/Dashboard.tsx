@@ -386,11 +386,42 @@ export default function Dashboard() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge>Confirmed</Badge>
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                              <span className={cn("text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
+                                {b.status}
+                              </span>
                               {b.tutor_id === user!.id && (
-                                <Button size="sm" variant="outline" onClick={() => markComplete(b.id, b.slot_id)}>Complete</Button>
+                                <Button size="sm" variant="outline" onClick={() => markComplete(b.id, b.slot_id)}>
+                                  <CheckCircle2 className="h-4 w-4" /> Complete
+                                </Button>
                               )}
+                              <Button size="sm" variant="outline" onClick={() => openReschedule(b)}>
+                                <CalendarClock className="h-4 w-4" /> Reschedule
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/30">
+                                    <XCircle className="h-4 w-4" /> Cancel
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Cancel this session?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      The other party will be notified and the time slot will become available again. This cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Keep session</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => cancelBooking(b.id)}
+                                      className="bg-red-500 text-white hover:bg-red-600"
+                                    >
+                                      Yes, cancel
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         ))}
