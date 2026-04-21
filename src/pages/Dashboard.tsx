@@ -562,6 +562,51 @@ export default function Dashboard() {
           </main>
         </div>
       </div>
+
+      {/* Reschedule dialog */}
+      <Dialog open={!!rescheduleBooking} onOpenChange={(o) => !o && setRescheduleBooking(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-primary" /> Reschedule session
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Pick a new available slot from {rescheduleBooking?.profiles?.full_name || "the tutor"}.
+            </p>
+            {availableSlots.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No other available slots from this tutor.</p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto space-y-2">
+                {availableSlots.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setPickedSlotId(s.id)}
+                    className={cn(
+                      "w-full text-left rounded-lg border p-3 text-sm transition-smooth",
+                      pickedSlotId === s.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/40 hover:bg-muted/40"
+                    )}
+                  >
+                    <span className="font-medium">{new Date(s.start_time).toLocaleDateString()}</span>{" "}
+                    {new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
+                    {new Date(s.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Button
+              onClick={confirmReschedule}
+              disabled={!pickedSlotId}
+              className="w-full gradient-cta text-primary-foreground border-0"
+            >
+              Confirm reschedule
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
