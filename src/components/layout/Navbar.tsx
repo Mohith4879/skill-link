@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { GraduationCap, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const navLinks = [
   { label: "Home", to: "/" },
@@ -64,13 +65,16 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-2">
           {user ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => { await signOut(); navigate("/"); }}
-            >
-              <LogOut className="h-4 w-4" /> Sign Out
-            </Button>
+            <>
+              <NotificationBell />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => { await signOut(); navigate("/"); }}
+              >
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            </>
           ) : (
             <>
               <Link to="/auth"><Button variant="ghost" size="sm">Sign In</Button></Link>
