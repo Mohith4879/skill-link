@@ -6,14 +6,18 @@ const corsHeaders = {
 };
 
 const TUTORS = [
-  { email: "aarav.sharma@skilllink.demo", name: "Aarav Sharma", bio: "IIT graduate passionate about teaching Mathematics and Physics. 5+ years of tutoring experience.", subjects: ["Mathematics","Physics","Calculus"], rate: 30, rating: 4.9, total: 47 },
-  { email: "priya.patel@skilllink.demo", name: "Priya Patel", bio: "Computer Science student specializing in Data Structures, Algorithms, and Python. Friendly and patient.", subjects: ["Computer Science","Python","Algorithms"], rate: 28, rating: 4.8, total: 62 },
-  { email: "rohan.mehta@skilllink.demo", name: "Rohan Mehta", bio: "Chemistry PhD candidate. I make complex organic chemistry simple and fun.", subjects: ["Chemistry","Organic Chemistry","Biochemistry"], rate: 35, rating: 4.7, total: 33 },
-  { email: "ananya.iyer@skilllink.demo", name: "Ananya Iyer", bio: "English literature major. Help with essays, grammar, and literature analysis.", subjects: ["English","Literature","Writing"], rate: 22, rating: 5.0, total: 28 },
-  { email: "vikram.singh@skilllink.demo", name: "Vikram Singh", bio: "Engineering student. Expert in JavaScript, React, and full-stack web development.", subjects: ["Web Development","React","JavaScript"], rate: 32, rating: 4.6, total: 41 },
-  { email: "meera.krishnan@skilllink.demo", name: "Meera Krishnan", bio: "Biology and Biotechnology specialist. Loves making science accessible to everyone.", subjects: ["Biology","Biotechnology","Genetics"], rate: 26, rating: 4.8, total: 35 },
-  { email: "arjun.reddy@skilllink.demo", name: "Arjun Reddy", bio: "Economics and Statistics tutor. Helping students ace board exams and university courses.", subjects: ["Economics","Statistics","Business Studies"], rate: 24, rating: 4.5, total: 19 },
-  { email: "kavya.nair@skilllink.demo", name: "Kavya Nair", bio: "Hindi and Sanskrit teacher with a passion for Indian classical languages and culture.", subjects: ["Hindi","Sanskrit","History"], rate: 20, rating: 4.9, total: 24 },
+  { email: "arjun.reddy@skilllink.demo",  name: "Arjun Reddy — Hyderabad",   bio: "Mathematics tutor from Hyderabad. IIT graduate, 5+ years helping students master algebra, calculus, and JEE prep.", subjects: ["Mathematics","Calculus","Algebra"], rate: 30, rating: 4.9, total: 47 },
+  { email: "priya.sharma@skilllink.demo", name: "Priya Sharma — Delhi",      bio: "Physics enthusiast from Delhi. Specializing in mechanics, electromagnetism, and modern physics for boards & NEET.", subjects: ["Physics","Mechanics","NEET Prep"], rate: 28, rating: 4.8, total: 62 },
+  { email: "rahul.verma@skilllink.demo",  name: "Rahul Verma — Mumbai",      bio: "Chemistry PhD candidate from Mumbai. I make organic and physical chemistry simple, intuitive, and fun.", subjects: ["Chemistry","Organic Chemistry","Physical Chemistry"], rate: 35, rating: 4.7, total: 33 },
+  { email: "sneha.iyer@skilllink.demo",   name: "Sneha Iyer — Chennai",      bio: "Biology specialist from Chennai. Loves making genetics, ecology, and human physiology accessible to everyone.", subjects: ["Biology","Genetics","Botany"], rate: 26, rating: 4.8, total: 35 },
+  { email: "vikram.singh@skilllink.demo", name: "Vikram Singh — Bangalore",  bio: "Computer Science engineer from Bangalore. Expert in DSA, Python, JavaScript, and full-stack web development.", subjects: ["Computer Science","Python","Web Development"], rate: 32, rating: 4.6, total: 41 },
+];
+
+const STUDENTS = [
+  { email: "ananya.gupta@skilllink.demo",  name: "Ananya Gupta — Lucknow" },
+  { email: "karthik.reddy@skilllink.demo", name: "Karthik Reddy — Vijayawada" },
+  { email: "meera.nair@skilllink.demo",    name: "Meera Nair — Kochi" },
+  { email: "rohan.das@skilllink.demo",     name: "Rohan Das — Kolkata" },
 ];
 
 Deno.serve(async (req) => {
@@ -87,6 +91,29 @@ Deno.serve(async (req) => {
       results.push({ email: t.email, status: "ok", userId });
     } catch (e: any) {
       results.push({ email: t.email, status: "failed", error: e.message });
+    }
+  }
+
+  // Seed demo students
+  for (const s of STUDENTS) {
+    try {
+      const { data: userData, error: userErr } = await supabase.auth.admin.createUser({
+        email: s.email,
+        password: "Demo1234!",
+        email_confirm: true,
+        user_metadata: { full_name: s.name },
+      });
+      let userId = userData?.user?.id;
+      if (userErr || !userId) {
+        const { data: list } = await supabase.auth.admin.listUsers();
+        const existing = list.users.find((u) => u.email === s.email);
+        if (existing) userId = existing.id;
+        else { results.push({ email: s.email, status: "failed", error: userErr?.message }); continue; }
+      }
+      await supabase.from("profiles").update({ full_name: s.name, role: "student" }).eq("user_id", userId);
+      results.push({ email: s.email, status: "ok", role: "student", userId });
+    } catch (e: any) {
+      results.push({ email: s.email, status: "failed", error: e.message });
     }
   }
 

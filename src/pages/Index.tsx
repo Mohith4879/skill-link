@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import {
   BookOpen, Users, Star, Clock, Search, GraduationCap,
-  ArrowRight, CheckCircle2, Sparkles, TrendingUp,
+  ArrowRight, CheckCircle2, Sparkles, TrendingUp, PlayCircle,
 } from "lucide-react";
 import heroImg from "@/assets/hero-illustration.png";
 
@@ -178,6 +178,37 @@ export default function Index() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* How It Works — Video */}
+      <section className="py-20 md:py-24 bg-muted/30 border-y border-border">
+        <div className="mx-auto max-w-5xl px-4 md:px-6">
+          <motion.div {...fadeInUp} className="text-center max-w-2xl mx-auto mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-4">
+              <PlayCircle className="h-3.5 w-3.5" />
+              How it works
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold">See Skill-Link in action</h2>
+            <p className="mt-4 text-muted-foreground">
+              Watch how easy it is to find a tutor, book a session, and start learning in minutes.
+            </p>
+          </motion.div>
+          <motion.div
+            {...fadeInUp}
+            className="relative rounded-3xl overflow-hidden shadow-elevated border border-border/60 bg-card"
+          >
+            <div className="aspect-video w-full">
+              <iframe
+                className="h-full w-full"
+                src="https://www.youtube.com/embed/HluANRwPyNo"
+                title="How online tutoring works"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </motion.div>
         </div>
       </section>
 
