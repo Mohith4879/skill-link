@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import {
   BookOpen, Users, Star, Clock, Search, GraduationCap,
-  ArrowRight, CheckCircle2, Sparkles, TrendingUp,
+  ArrowRight, CheckCircle2, Sparkles, TrendingUp, PlayCircle,
 } from "lucide-react";
 import heroImg from "@/assets/hero-illustration.png";
 
