@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import Navbar from "@/components/layout/Navbar";
-import { Star, Search, BookOpen, Users } from "lucide-react";
+import { Star, Search, BookOpen, Users, SlidersHorizontal, X } from "lucide-react";
 
 interface TutorWithProfile {
   id: string;
@@ -24,6 +28,10 @@ export default function Tutors() {
   const [tutors, setTutors] = useState<TutorWithProfile[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [subject, setSubject] = useState<string>("all");
+  const [minRating, setMinRating] = useState<string>("0");
+  const [sortBy, setSortBy] = useState<string>("rating");
+  const [maxPrice, setMaxPrice] = useState<number>(100);
 
   useEffect(() => {
     const fetchTutors = async () => {
@@ -46,12 +54,29 @@ export default function Tutors() {
 
   const filtered = tutors.filter((t) => {
     const q = search.toLowerCase();
-    return (
+    const matchSearch =
       !q ||
       t.subjects.some((s) => s.toLowerCase().includes(q)) ||
-      (t.profiles?.full_name || "").toLowerCase().includes(q)
-    );
+      (t.profiles?.full_name || "").toLowerCase().includes(q);
+    const matchSubject = subject === "all" || t.subjects.includes(subject);
+    const matchRating = Number(t.rating || 0) >= Number(minRating);
+    const matchPrice = Number(t.hourly_rate || 0) <= maxPrice;
+    return matchSearch && matchSubject && matchRating && matchPrice;
   });
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "price_low":  return Number(a.hourly_rate || 0) - Number(b.hourly_rate || 0);
+      case "price_high": return Number(b.hourly_rate || 0) - Number(a.hourly_rate || 0);
+      case "reviews":    return (b.total_ratings || 0) - (a.total_ratings || 0);
+      case "rating":
+      default:           return Number(b.rating || 0) - Number(a.rating || 0);
+    }
+  });
+
+  const allSubjects = Array.from(new Set(tutors.flatMap((t) => t.subjects))).sort();
+  const filtersActive = subject !== "all" || minRating !== "0" || maxPrice < 100 || sortBy !== "rating";
+  const resetFilters = () => { setSubject("all"); setMinRating("0"); setMaxPrice(100); setSortBy("rating"); };
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,24 +107,83 @@ export default function Tutors() {
       </section>
 
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-10">
+        {/* Filters */}
+        <div className="mb-6 flex flex-col lg:flex-row lg:items-end gap-3 lg:gap-4 p-4 rounded-2xl border border-border/60 bg-card shadow-soft">
+          <div className="flex items-center gap-2 text-sm font-medium shrink-0">
+            <SlidersHorizontal className="h-4 w-4 text-primary" /> Filters
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 flex-1 w-full">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Subject</label>
+              <Select value={subject} onValueChange={setSubject}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All subjects</SelectItem>
+                  {allSubjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Min rating</label>
+              <Select value={minRating} onValueChange={setMinRating}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Any</SelectItem>
+                  <SelectItem value="3">3.0+</SelectItem>
+                  <SelectItem value="4">4.0+</SelectItem>
+                  <SelectItem value="4.5">4.5+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <label className="text-xs text-muted-foreground mb-1 flex items-center justify-between">
+                <span>Max price</span>
+                <span className="font-semibold text-foreground">${maxPrice}/hr</span>
+              </label>
+              <Slider value={[maxPrice]} onValueChange={(v) => setMaxPrice(v[0])} min={0} max={100} step={5} className="mt-3" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Sort by</label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Highest rated</SelectItem>
+                  <SelectItem value="reviews">Most reviewed</SelectItem>
+                  <SelectItem value="price_low">Price: low to high</SelectItem>
+                  <SelectItem value="price_high">Price: high to low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {filtersActive && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="shrink-0 h-9">
+              <X className="h-3.5 w-3.5" /> Reset
+            </Button>
+          )}
+        </div>
+
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-56 rounded-xl bg-muted animate-pulse" />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <div className="text-center py-20">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground">
-              No tutors found. {tutors.length === 0 && "Be the first to become a tutor!"}
+              No tutors match your filters. {filtersActive && (
+                <button onClick={resetFilters} className="text-primary hover:underline">Clear filters</button>
+              )}
             </p>
           </div>
         ) : (
+          <>
+          <p className="text-sm text-muted-foreground mb-4">{sorted.length} {sorted.length === 1 ? "tutor" : "tutors"} found</p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((t, i) => (
+            {sorted.map((t, i) => (
               <motion.div
                 key={t.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -150,6 +234,7 @@ export default function Tutors() {
               </motion.div>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>
