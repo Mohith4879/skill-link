@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Star, Clock, ArrowLeft, Calendar, CheckCircle2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AvailabilityCalendar from "@/components/calendar/AvailabilityCalendar";
 
 export default function TutorProfile() {
   const { userId } = useParams();
@@ -25,6 +26,7 @@ export default function TutorProfile() {
   const [selectedSlot, setSelectedSlot] = useState<any | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [slotView, setSlotView] = useState<"calendar" | "list">("calendar");
 
   useEffect(() => {
     if (!userId) return;
@@ -129,9 +131,33 @@ export default function TutorProfile() {
         {/* Available Slots */}
         <Card className="mt-6 border-border/60 shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display">
-              <Calendar className="h-5 w-5 text-primary" /> Available Time Slots
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <CardTitle className="flex items-center gap-2 font-display">
+                <Calendar className="h-5 w-5 text-primary" /> Available Time Slots
+              </CardTitle>
+              {slots.length > 0 && (
+                <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/40">
+                  <button
+                    onClick={() => setSlotView("calendar")}
+                    className={cn(
+                      "px-3 py-1 text-xs font-medium rounded-md transition-smooth",
+                      slotView === "calendar" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    Calendar
+                  </button>
+                  <button
+                    onClick={() => setSlotView("list")}
+                    className={cn(
+                      "px-3 py-1 text-xs font-medium rounded-md transition-smooth",
+                      slotView === "list" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    List
+                  </button>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {slots.length === 0 ? (
@@ -139,6 +165,11 @@ export default function TutorProfile() {
                 <Clock className="h-10 w-10 mx-auto mb-2 opacity-40" />
                 <p className="text-sm">No available slots right now. Check back soon!</p>
               </div>
+            ) : slotView === "calendar" ? (
+              <AvailabilityCalendar
+                slots={slots}
+                onPick={(s) => { setSelectedSlot(s); setConfirmOpen(true); }}
+              />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {slots.map((slot) => {
