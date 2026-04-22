@@ -25,9 +25,10 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
-  XCircle, CalendarClock,
+  XCircle, CalendarClock, MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ChatDialog from "@/components/chat/ChatDialog";
 
 type View = "overview" | "sessions" | "history" | "tutor" | "settings";
 
@@ -172,6 +173,8 @@ export default function Dashboard() {
   const [rescheduleBooking, setRescheduleBooking] = useState<any>(null);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [pickedSlotId, setPickedSlotId] = useState<string>("");
+
+  const [chatBooking, setChatBooking] = useState<{ id: string; otherName: string } | null>(null);
 
   const openReschedule = async (booking: any) => {
     setRescheduleBooking(booking);
@@ -390,6 +393,16 @@ export default function Dashboard() {
                               <span className={cn("text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
                                 {b.status}
                               </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setChatBooking({
+                                  id: b.id,
+                                  otherName: (b.student_id === user!.id ? b.profiles?.full_name : b.student?.full_name) || "your contact",
+                                })}
+                              >
+                                <MessageSquare className="h-4 w-4" /> Chat
+                              </Button>
                               {b.tutor_id === user!.id && (
                                 <Button size="sm" variant="outline" onClick={() => markComplete(b.id, b.slot_id)}>
                                   <CheckCircle2 className="h-4 w-4" /> Complete
