@@ -620,6 +620,12 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ChatDialog
+        bookingId={chatBooking?.id ?? null}
+        otherName={chatBooking?.otherName ?? ""}
+        onClose={() => setChatBooking(null)}
+      />
     </div>
   );
 }
