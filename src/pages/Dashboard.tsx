@@ -25,7 +25,7 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
-  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink,
+  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink, Sparkles, TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatDialog from "@/components/chat/ChatDialog";
