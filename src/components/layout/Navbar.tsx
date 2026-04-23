@@ -9,6 +9,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 const navLinks = [
   { label: "Home", to: "/" },
   { label: "Tutors", to: "/tutors" },
+  { label: "Subjects", to: "/subjects" },
   { label: "Dashboard", to: "/dashboard" },
 ];
 

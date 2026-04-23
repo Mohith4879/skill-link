@@ -25,7 +25,7 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
-  XCircle, CalendarClock, MessageSquare,
+  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatDialog from "@/components/chat/ChatDialog";
@@ -555,7 +555,7 @@ export default function Dashboard() {
               {view === "settings" && (
                 <Card className="border-border/60 shadow-card">
                   <CardHeader><CardTitle className="font-display">Account Settings</CardTitle></CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-5">
                     <div className="space-y-2 max-w-xs">
                       <Label>Account Role</Label>
                       <Select value={role} onValueChange={updateRole}>
@@ -567,6 +567,23 @@ export default function Dashboard() {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">Switch to "Tutor" or "Both" to start offering sessions.</p>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                      <Link to="/profile">
+                        <Button variant="outline" className="w-full justify-between">
+                          <span className="flex items-center gap-2"><UserCog className="h-4 w-4" /> Edit profile</span>
+                          <ExternalLink className="h-4 w-4 opacity-60" />
+                        </Button>
+                      </Link>
+                      {isTutor && (
+                        <Link to="/earnings">
+                          <Button variant="outline" className="w-full justify-between">
+                            <span className="flex items-center gap-2"><Wallet className="h-4 w-4" /> View earnings</span>
+                            <ExternalLink className="h-4 w-4 opacity-60" />
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
