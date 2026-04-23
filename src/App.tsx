@@ -14,6 +14,8 @@ import ProfileSettings from "./pages/ProfileSettings";
 import Earnings from "./pages/Earnings";
 import Subjects from "./pages/Subjects";
 import SubjectDetail from "./pages/SubjectDetail";
+import TutorOnboarding from "./pages/TutorOnboarding";
+import LearningHistory from "./pages/LearningHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<ProfileSettings />} />
               <Route path="/earnings" element={<Earnings />} />
+              <Route path="/onboarding/tutor" element={<TutorOnboarding />} />
+              <Route path="/learning" element={<LearningHistory />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

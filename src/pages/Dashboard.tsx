@@ -25,7 +25,7 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
-  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink,
+  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink, Sparkles, TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatDialog from "@/components/chat/ChatDialog";
@@ -583,6 +583,22 @@ export default function Dashboard() {
                             <ExternalLink className="h-4 w-4 opacity-60" />
                           </Button>
                         </Link>
+                      )}
+                      {!isTutor && (
+                        <>
+                          <Link to="/learning">
+                            <Button variant="outline" className="w-full justify-between">
+                              <span className="flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Learning history</span>
+                              <ExternalLink className="h-4 w-4 opacity-60" />
+                            </Button>
+                          </Link>
+                          <Link to="/onboarding/tutor" className="sm:col-span-2">
+                            <Button className="w-full justify-between gradient-cta text-primary-foreground border-0">
+                              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> Become a tutor</span>
+                              <ExternalLink className="h-4 w-4 opacity-80" />
+                            </Button>
+                          </Link>
+                        </>
                       )}
                     </div>
                   </CardContent>
