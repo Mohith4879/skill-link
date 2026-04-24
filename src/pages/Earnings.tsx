@@ -11,6 +11,7 @@ import {
   DollarSign, TrendingUp, Calendar, CheckCircle2, Wallet, ArrowUpRight, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StatGridSkeleton, ListRowsSkeleton } from "@/components/skeletons/PageSkeletons";
 
 type SessionRow = {
   id: string;
@@ -90,7 +91,16 @@ export default function Earnings() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading...</div>
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-10 space-y-6">
+          <div className="space-y-2">
+            <div className="h-9 w-64 bg-muted/60 rounded animate-pulse" />
+            <div className="h-4 w-80 bg-muted/40 rounded animate-pulse" />
+          </div>
+          <StatGridSkeleton />
+          <Card className="border-border/60 shadow-card">
+            <CardContent className="p-5"><ListRowsSkeleton rows={4} /></CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

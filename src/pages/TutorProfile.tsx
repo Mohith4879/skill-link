@@ -14,6 +14,7 @@ import {
 import { Star, Clock, ArrowLeft, Calendar, CheckCircle2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AvailabilityCalendar from "@/components/calendar/AvailabilityCalendar";
+import { ProfileHeroSkeleton, ListRowsSkeleton } from "@/components/skeletons/PageSkeletons";
 
 export default function TutorProfile() {
   const { userId } = useParams();
@@ -78,7 +79,14 @@ export default function TutorProfile() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading...</div>
+        <div className="mx-auto max-w-5xl px-4 md:px-6 py-8 space-y-6">
+          <ProfileHeroSkeleton />
+          <Card className="border-border/60 shadow-card">
+            <CardContent className="p-5">
+              <ListRowsSkeleton rows={3} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

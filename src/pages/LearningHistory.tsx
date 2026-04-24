@@ -13,6 +13,7 @@ import {
   Calendar, GraduationCap, Sparkles,
 } from "lucide-react";
 import { subjectToSlug } from "@/lib/subjects";
+import { StatGridSkeleton, ListRowsSkeleton } from "@/components/skeletons/PageSkeletons";
 
 type Booking = {
   id: string;
@@ -124,7 +125,16 @@ export default function LearningHistory() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading…</div>
+        <div className="mx-auto max-w-6xl px-4 md:px-6 py-10 space-y-6">
+          <div className="space-y-2">
+            <div className="h-9 w-72 bg-muted/60 rounded animate-pulse" />
+            <div className="h-4 w-80 bg-muted/40 rounded animate-pulse" />
+          </div>
+          <StatGridSkeleton />
+          <Card className="border-border/60 shadow-card">
+            <CardContent className="p-5"><ListRowsSkeleton rows={4} /></CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

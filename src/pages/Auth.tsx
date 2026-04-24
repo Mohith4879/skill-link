@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import authImg from "@/assets/auth-illustration.png";
 
@@ -15,6 +16,9 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -35,6 +39,25 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotSending(false);
+    if (error) {
+      toast({ title: "Couldn't send email", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Check your inbox 📧",
+      description: "If an account exists, you'll get a reset link shortly.",
+    });
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   return (
@@ -138,6 +161,17 @@ export default function Auth() {
                 minLength={6}
                 className="h-11 rounded-lg transition-smooth focus-visible:ring-primary/40 focus-visible:border-primary"
               />
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setForgotEmail(email); setForgotOpen(true); }}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </div>
             <Button
               type="submit"
@@ -156,6 +190,41 @@ export default function Auth() {
           </p>
         </motion.div>
       </div>
+
+      {/* Forgot password dialog */}
+      {forgotOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={() => setForgotOpen(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-elevated"
+          >
+            <h2 className="font-display text-xl font-bold">Reset your password</h2>
+            <p className="text-sm text-muted-foreground mt-1">Enter your email and we'll send a link to set a new password.</p>
+            <form onSubmit={handleForgot} className="mt-5 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">Email</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  required
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="h-11 rounded-lg"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={forgotSending} className="gradient-cta text-primary-foreground border-0">
+                  {forgotSending ? "Sending…" : "Send reset link"}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
