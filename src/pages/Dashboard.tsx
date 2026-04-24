@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatDialog from "@/components/chat/ChatDialog";
+import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
 
 type View = "overview" | "sessions" | "history" | "tutor" | "settings";
 
@@ -72,6 +73,23 @@ export default function Dashboard() {
       supabase.from("bookings").select("*, time_slots(*)").or(`student_id.eq.${user.id},tutor_id.eq.${user.id}`).order("created_at", { ascending: false }),
       supabase.from("ratings").select("booking_id").eq("student_id", user.id),
     ]);
+    // Auto-complete: any confirmed booking whose end_time has passed
+    const now = Date.now();
+    const toAutoComplete = (bk || []).filter(
+      (b: any) => b.status === "confirmed" && b.time_slots?.end_time && new Date(b.time_slots.end_time).getTime() < now
+    );
+    if (toAutoComplete.length > 0) {
+      await Promise.all(
+        toAutoComplete.map((b: any) =>
+          Promise.all([
+            supabase.from("bookings").update({ status: "completed" }).eq("id", b.id),
+            supabase.from("time_slots").update({ status: "completed" }).eq("id", b.slot_id),
+          ])
+        )
+      );
+      // reflect locally so the rest of this render is consistent
+      toAutoComplete.forEach((b: any) => { b.status = "completed"; });
+    }
     setProfile(p);
     setRole(p?.role || "student");
     setTutorProfile(tp);
@@ -170,6 +188,22 @@ export default function Dashboard() {
     loadData();
   };
 
+  const acceptBooking = async (bookingId: string) => {
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: "confirmed" } : b)));
+    const { error } = await supabase.from("bookings").update({ status: "confirmed" }).eq("id", bookingId);
+    if (error) toast({ title: "Could not accept", description: error.message, variant: "destructive" });
+    else toast({ title: "Booking accepted ✓" });
+    loadData();
+  };
+
+  const declineBooking = async (bookingId: string) => {
+    setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b)));
+    const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
+    if (error) toast({ title: "Could not decline", description: error.message, variant: "destructive" });
+    else toast({ title: "Booking declined" });
+    loadData();
+  };
+
   const [rescheduleBooking, setRescheduleBooking] = useState<any>(null);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [pickedSlotId, setPickedSlotId] = useState<string>("");
@@ -220,13 +254,16 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading...</div>
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-8">
+          <DashboardSkeleton />
+        </div>
       </div>
     );
   }
 
   const isTutor = role === "tutor" || role === "both";
   const upcoming = bookings.filter((b) => b.status === "confirmed");
+  const pendingForTutor = bookings.filter((b) => b.status === "pending" && b.tutor_id === user!.id);
   const history = bookings.filter((b) => b.status === "completed" || b.status === "cancelled");
   const completedCount = bookings.filter((b) => b.status === "completed").length;
   const tutorEarnings = isTutor
