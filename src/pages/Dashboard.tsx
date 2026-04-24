@@ -402,6 +402,41 @@ export default function Dashboard() {
               )}
 
               {view === "sessions" && (
+                <>
+                {pendingForTutor.length > 0 && (
+                  <Card className="border-amber-500/30 shadow-card bg-amber-500/5">
+                    <CardHeader>
+                      <CardTitle className="font-display flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-amber-500" /> Pending requests
+                        <Badge variant="secondary" className="ml-1">{pendingForTutor.length}</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {pendingForTutor.map((b) => (
+                          <div key={b.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+                            <div>
+                              <p className="font-medium">Student: {b.student?.full_name || "—"}</p>
+                              {b.time_slots && (
+                                <p className="text-sm text-muted-foreground mt-0.5">
+                                  {new Date(b.time_slots.start_time).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/40" onClick={() => declineBooking(b.id)}>
+                                <XCircle className="h-4 w-4" /> Decline
+                              </Button>
+                              <Button size="sm" className="gradient-cta text-primary-foreground border-0" onClick={() => acceptBooking(b.id)}>
+                                <CheckCircle2 className="h-4 w-4" /> Accept
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 <Card className="border-border/60 shadow-card">
                   <CardHeader>
                     <CardTitle className="font-display flex items-center gap-2"><Calendar className="h-5 w-5 text-primary" /> Upcoming Sessions</CardTitle>
@@ -479,6 +514,7 @@ export default function Dashboard() {
                     )}
                   </CardContent>
                 </Card>
+                </>
               )}
 
               {view === "history" && (
