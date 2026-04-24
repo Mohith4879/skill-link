@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, Sparkles, CheckCircle2, ArrowLeft } from "lucide-react";
 import authImg from "@/assets/auth-illustration.png";
 
@@ -15,6 +16,9 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -35,6 +39,25 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotSending(false);
+    if (error) {
+      toast({ title: "Couldn't send email", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Check your inbox 📧",
+      description: "If an account exists, you'll get a reset link shortly.",
+    });
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   return (
