@@ -16,6 +16,7 @@ import Subjects from "./pages/Subjects";
 import SubjectDetail from "./pages/SubjectDetail";
 import TutorOnboarding from "./pages/TutorOnboarding";
 import LearningHistory from "./pages/LearningHistory";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/earnings" element={<Earnings />} />
               <Route path="/onboarding/tutor" element={<TutorOnboarding />} />
               <Route path="/learning" element={<LearningHistory />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
