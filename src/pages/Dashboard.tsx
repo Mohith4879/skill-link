@@ -25,11 +25,12 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Star, Plus, Trash2, LayoutDashboard, Calendar, History,
   UserCog, Clock, DollarSign, GraduationCap, CheckCircle2, Users, BookOpen,
-  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink, Sparkles, TrendingUp,
+  XCircle, CalendarClock, MessageSquare, Wallet, ExternalLink, Sparkles, TrendingUp, Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatDialog from "@/components/chat/ChatDialog";
 import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
+import { meetingUrlForBooking, isJoinable } from "@/lib/meeting";
 
 type View = "overview" | "sessions" | "history" | "tutor" | "settings";
 
