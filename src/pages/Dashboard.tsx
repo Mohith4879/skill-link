@@ -466,6 +466,22 @@ export default function Dashboard() {
                               <span className={cn("text-xs font-medium px-2.5 py-1 rounded-md capitalize", statusBadgeClass(b.status))}>
                                 {b.status}
                               </span>
+                              {(() => {
+                                const joinable = isJoinable(b.time_slots?.start_time, b.time_slots?.end_time);
+                                return (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => window.open(meetingUrlForBooking(b.id), "_blank", "noopener,noreferrer")}
+                                    className={cn(
+                                      "border-0 text-primary-foreground",
+                                      joinable ? "gradient-cta shadow-soft hover:shadow-glow" : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                                    )}
+                                    title={joinable ? "Join the video call" : "Available 10 minutes before start"}
+                                  >
+                                    <Video className="h-4 w-4" /> {joinable ? "Join call" : "Video link"}
+                                  </Button>
+                                );
+                              })()}
                               <Button
                                 size="sm"
                                 variant="outline"
