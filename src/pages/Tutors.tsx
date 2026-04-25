@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import Navbar from "@/components/layout/Navbar";
-import { Star, Search, BookOpen, Users, SlidersHorizontal, X } from "lucide-react";
+import { Star, Search, BookOpen, Users, SlidersHorizontal, X, Heart } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import VerifiedBadge from "@/components/safety/VerifiedBadge";
+import { cn } from "@/lib/utils";
 
 interface TutorWithProfile {
   id: string;
@@ -21,6 +26,7 @@ interface TutorWithProfile {
   hourly_rate: number;
   rating: number;
   total_ratings: number;
+  verified?: boolean;
   profiles: { full_name: string; avatar_url: string | null } | null;
 }
 
@@ -32,6 +38,10 @@ export default function Tutors() {
   const [minRating, setMinRating] = useState<string>("0");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [maxPrice, setMaxPrice] = useState<number>(100);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
     const fetchTutors = async () => {
@@ -61,7 +71,8 @@ export default function Tutors() {
     const matchSubject = subject === "all" || t.subjects.includes(subject);
     const matchRating = Number(t.rating || 0) >= Number(minRating);
     const matchPrice = Number(t.hourly_rate || 0) <= maxPrice;
-    return matchSearch && matchSubject && matchRating && matchPrice;
+    const matchFav = !onlyFavorites || isFavorite(t.user_id);
+    return matchSearch && matchSubject && matchRating && matchPrice && matchFav;
   });
 
   const sorted = [...filtered].sort((a, b) => {
@@ -75,8 +86,19 @@ export default function Tutors() {
   });
 
   const allSubjects = Array.from(new Set(tutors.flatMap((t) => t.subjects))).sort();
-  const filtersActive = subject !== "all" || minRating !== "0" || maxPrice < 100 || sortBy !== "rating";
-  const resetFilters = () => { setSubject("all"); setMinRating("0"); setMaxPrice(100); setSortBy("rating"); };
+  const filtersActive = subject !== "all" || minRating !== "0" || maxPrice < 100 || sortBy !== "rating" || onlyFavorites;
+  const resetFilters = () => { setSubject("all"); setMinRating("0"); setMaxPrice(100); setSortBy("rating"); setOnlyFavorites(false); };
+
+  const handleFavToggle = async (e: React.MouseEvent, tutorUserId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast({ title: "Sign in required", description: "Sign in to save your favorite tutors." });
+      return;
+    }
+    const added = await toggle(tutorUserId);
+    toast({ title: added ? "Saved to favorites" : "Removed from favorites" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,11 +177,23 @@ export default function Tutors() {
               </Select>
             </div>
           </div>
-          {filtersActive && (
-            <Button variant="ghost" size="sm" onClick={resetFilters} className="shrink-0 h-9">
-              <X className="h-3.5 w-3.5" /> Reset
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {user && (
+              <Button
+                variant={onlyFavorites ? "default" : "outline"}
+                size="sm"
+                onClick={() => setOnlyFavorites((v) => !v)}
+                className={cn("h-9", onlyFavorites && "gradient-cta text-primary-foreground border-0")}
+              >
+                <Heart className={cn("h-3.5 w-3.5", onlyFavorites && "fill-current")} /> Favorites
+              </Button>
+            )}
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-9">
+                <X className="h-3.5 w-3.5" /> Reset
+              </Button>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -191,15 +225,28 @@ export default function Tutors() {
                 transition={{ duration: 0.4, delay: i * 0.04 }}
               >
                 <Link to={`/tutor/${t.user_id}`}>
-                  <Card className="group h-full overflow-hidden border-border/60 transition-smooth hover:shadow-elevated hover:-translate-y-1 hover:border-primary/30">
+                  <Card className="group relative h-full overflow-hidden border-border/60 transition-smooth hover:shadow-elevated hover:-translate-y-1 hover:border-primary/30">
                     <div className="h-2 gradient-primary" />
                     <CardContent className="p-6">
+                      <button
+                        onClick={(e) => handleFavToggle(e, t.user_id)}
+                        className={cn(
+                          "absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-card/90 backdrop-blur border border-border/60 transition-smooth hover:scale-110",
+                          isFavorite(t.user_id) ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+                        )}
+                        aria-label={isFavorite(t.user_id) ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Heart className={cn("h-4 w-4", isFavorite(t.user_id) && "fill-current")} />
+                      </button>
                       <div className="flex items-start gap-4">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary text-primary-foreground font-display font-bold text-xl shadow-soft transition-smooth group-hover:scale-105">
                           {(t.profiles?.full_name || "T")[0].toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-display font-semibold truncate text-lg">{t.profiles?.full_name || "Tutor"}</h3>
+                          <h3 className="font-display font-semibold text-lg flex items-center gap-1.5">
+                            <span className="truncate">{t.profiles?.full_name || "Tutor"}</span>
+                            {t.verified && <VerifiedBadge />}
+                          </h3>
                           <div className="mt-1 flex items-center gap-1 text-sm">
                             <Star className="h-4 w-4 fill-accent text-accent" />
                             <span className="font-medium">{Number(t.rating).toFixed(1)}</span>

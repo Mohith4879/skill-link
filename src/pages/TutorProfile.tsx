@@ -11,10 +11,16 @@ import Navbar from "@/components/layout/Navbar";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { Star, Clock, ArrowLeft, Calendar, CheckCircle2, MessageSquare } from "lucide-react";
+import { Star, Clock, ArrowLeft, Calendar, CheckCircle2, MessageSquare, Heart, MoreVertical, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AvailabilityCalendar from "@/components/calendar/AvailabilityCalendar";
 import { ProfileHeroSkeleton, ListRowsSkeleton } from "@/components/skeletons/PageSkeletons";
+import { useFavorites } from "@/hooks/useFavorites";
+import VerifiedBadge from "@/components/safety/VerifiedBadge";
+import ReportUserDialog from "@/components/safety/ReportUserDialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function TutorProfile() {
   const { userId } = useParams();
@@ -28,6 +34,8 @@ export default function TutorProfile() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [booking, setBooking] = useState(false);
   const [slotView, setSlotView] = useState<"calendar" | "list">("calendar");
+  const [reportOpen, setReportOpen] = useState(false);
+  const { isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
     if (!userId) return;
@@ -75,6 +83,13 @@ export default function TutorProfile() {
     }
   };
 
+  const onFavoriteClick = async () => {
+    if (!user) { navigate("/auth"); return; }
+    if (!userId) return;
+    const added = await toggle(userId);
+    toast({ title: added ? "Saved to favorites" : "Removed from favorites" });
+  };
+
   if (!tutor) {
     return (
       <div className="min-h-screen bg-background">
@@ -110,7 +125,37 @@ export default function TutorProfile() {
                   {(tutor.profiles?.full_name || "T")[0].toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <h1 className="font-display text-2xl md:text-3xl font-bold">{tutor.profiles?.full_name || "Tutor"}</h1>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-2">
+                      {tutor.profiles?.full_name || "Tutor"}
+                      {tutor.verified && <VerifiedBadge size="md" />}
+                    </h1>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onFavoriteClick}
+                        className={cn(userId && isFavorite(userId) && "border-destructive/50 text-destructive")}
+                      >
+                        <Heart className={cn("h-4 w-4", userId && isFavorite(userId) && "fill-current")} />
+                        {userId && isFavorite(userId) ? "Saved" : "Save"}
+                      </Button>
+                      {user && user.id !== userId && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" aria-label="More options">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-destructive focus:text-destructive">
+                              <Flag className="h-4 w-4" /> Report this tutor
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-accent text-accent" />
@@ -280,6 +325,15 @@ export default function TutorProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {userId && (
+        <ReportUserDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          reportedUserId={userId}
+          reportedUserName={tutor.profiles?.full_name}
+        />
+      )}
     </div>
   );
 }
