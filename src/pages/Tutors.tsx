@@ -225,7 +225,7 @@ export default function Tutors() {
                 transition={{ duration: 0.4, delay: i * 0.04 }}
               >
                 <Link to={`/tutor/${t.user_id}`}>
-                  <Card className="group h-full overflow-hidden border-border/60 transition-smooth hover:shadow-elevated hover:-translate-y-1 hover:border-primary/30">
+                  <Card className="group relative h-full overflow-hidden border-border/60 transition-smooth hover:shadow-elevated hover:-translate-y-1 hover:border-primary/30">
                     <div className="h-2 gradient-primary" />
                     <CardContent className="p-6">
                       <button
